@@ -35,9 +35,9 @@ void HttpApp::handle_http_settings() {
     Serial.println(usr);
     Serial.println(pass);
 
-    if (!_server->authenticate(usr[0], pass[0])) {
-        return _server->requestAuthentication();
-    }    
+    //if (!_server->authenticate(usr[0], pass[0])) {
+    //    return _server->requestAuthentication();
+    //}    
 
     if(_server->method() == HTTP_POST) {
   

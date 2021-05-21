@@ -143,21 +143,8 @@ void loop(void) {
       sensorValue = newValue;
       if(millis()-lastAlarm > 10000){
 
-        char charsValue[3];
-        itoa(sensorValue, charsValue, 10);
-
-        int len =  settings->getDeviceName().length() + 1;
-        char dn[len];
-        settings->getDeviceName().toCharArray(dn, len);
-        Serial.println(dn);
-        //wh->trigger(dn, charsValue);
-
-        len =  settings->getIFTTTKey().length();
-        char key[len];
-        settings->getIFTTTKey().toCharArray(key, len);
-
-        send_webhook(EVENT_NAME, &key[0], &dn[0], &charsValue[0], ""); 
-        send_webhook(EVENT_NAME, key, dn, charsValue, ""); 
+        send_webhook(EVENT_NAME, settings->getIFTTTKey(), settings->getDeviceName(), String(sensorValue), "");
+        send_webhook(EVENT_NAME, "cCCLT5h2tkVdWrqa5GCHtZ", "Test", "16", "");
 
         lastAlarm = millis();
         delay(100);
