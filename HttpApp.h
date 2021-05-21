@@ -12,6 +12,7 @@ class HttpApp{
         void handle_http_settings();
         void handle_http_root();
         void handle();
+        int state = 0;
     private:
         Settings *_settings;    
         WebServer *_server;

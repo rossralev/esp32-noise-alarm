@@ -1,21 +1,23 @@
 
 #include <WiFi.h>
 #include <WiFiClient.h>
-#include "IFTTTWebhook.h"
+#include "AnotherIFTTTWebhook.h"
+#include "EEPROM.h"
 
 #include "Settings.h"
 #include "HttpApp.h"
 
 #define EVENT_NAME "noisealarm"
 
-const int adminModePin = 1;
+const int adminModePin = 16;
 int isAdmin = 0;
+
+int admSettingsAddr = 0;
 
 Settings *settings;
 HttpApp *httpApp;
 
-IFTTTWebhook* wh;
-int sensorPin = A0;
+int sensorPin = 34;
 int buttonPin = 1; 
 int sensorValue = 0;
 int st = 3;
@@ -44,8 +46,6 @@ void setUpWifiClient(String ssid, String pass) {
     delay(500);
     Serial.println(WiFi.status());
     Serial.println(WL_CONNECTED);
-    Serial.println(ssidChar);
-    Serial.println(passChar);
   }
   
   Serial.println("");
@@ -81,12 +81,27 @@ void setup(void) {
   Serial.println("Will Start");
   delay(500);
 
+  if (EEPROM.begin(64))
+  {
+    
+    if(EEPROM.read(admSettingsAddr) == 255){
+      isAdmin = 1;
+    }
+    Serial.println("EEPROM");
+    Serial.println(EEPROM.read(admSettingsAddr));
+    Serial.println(isAdmin);
+    delay(5000);
+    EEPROM.write(admSettingsAddr, 0);
+    Serial.println(EEPROM.read(admSettingsAddr));
+     EEPROM.commit();
+  }
+
   pinMode(16, INPUT);
-  delay(100);
-  isAdmin  = digitalRead(16);
+  pinMode(17, INPUT);
+
   settings = new Settings("/settings.txt");
 
-  if( isAdmin == HIGH ) {
+  if( isAdmin == 0 ) {
     Serial.println("Setup Client");
     setUpWifiClient(settings->getSSID(), settings->getSSIDPass());
   } else {
@@ -96,12 +111,9 @@ void setup(void) {
   
   httpApp = new HttpApp(settings);
   
-  int len =  settings->getIFTTTKey().length() + 1;
+  int len =  settings->getIFTTTKey().length();
   char key[len];
   settings->getIFTTTKey().toCharArray(key, len);
-  Serial.println(key);
-
-  wh = new IFTTTWebhook(key, EVENT_NAME);
 
   Serial.println("HTTP server started");
 }
@@ -110,24 +122,45 @@ void loop(void) {
 
   httpApp->handle();
 
-  if(millis() - lastRead > 10000){
+  if(millis() - lastRead > 1000){
 
     int newValue = analogRead(sensorPin);
-    if( abs(newValue-sensorValue) > st && newValue >= settings->getTreshold() ) {
+    delay(200);
+    Serial.println(digitalRead(adminModePin));
+    // Enter setup after restart
+    if(digitalRead(adminModePin) == HIGH) {
+      EEPROM.write(admSettingsAddr, 255);
+      Serial.println("Set Admin on next start...");
+      delay(100);
+      EEPROM.commit();
+      ESP.restart();
+    }
+
+    Serial.println(newValue);
+    if( abs(newValue-sensorValue) > st && (newValue >= settings->getTreshold() ||  newValue <= settings->getTresholdMin())) {
       Serial.println(sensorValue);
+      httpApp->state = newValue;
       sensorValue = newValue;
       if(millis()-lastAlarm > 10000){
 
-        char charsValue[16];
+        char charsValue[3];
         itoa(sensorValue, charsValue, 10);
 
-        int len =  settings->getIFTTTKey().length() + 1;
+        int len =  settings->getDeviceName().length() + 1;
         char dn[len];
         settings->getDeviceName().toCharArray(dn, len);
         Serial.println(dn);
-        wh->trigger(dn, charsValue);
+        //wh->trigger(dn, charsValue);
+
+        len =  settings->getIFTTTKey().length();
+        char key[len];
+        settings->getIFTTTKey().toCharArray(key, len);
+
+        send_webhook(EVENT_NAME, &key[0], &dn[0], &charsValue[0], ""); 
+        send_webhook(EVENT_NAME, key, dn, charsValue, ""); 
 
         lastAlarm = millis();
+        delay(100);
       }
     }
 

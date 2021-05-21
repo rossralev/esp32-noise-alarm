@@ -18,8 +18,6 @@ Settings::Settings( char* path) {
     load();
   }
 
-  Serial.println(this->getAppUser());
-
 };
 
 void Settings::load() {
@@ -33,13 +31,14 @@ void Settings::load() {
 
   Serial.print("Read from file: ");
 
-  _appUser    = readLine(file);
-  _appPass    = readLine(file);
-  _ssid       = readLine(file);
-  _ssidPass   = readLine(file);
-  _iftttKey   = readLine(file);
-  _treshold   = readLine(file);
-  _deviceName = readLine(file);
+  _appUser     = readLine(file);
+  _appPass     = readLine(file);
+  _ssid        = readLine(file);
+  _ssidPass    = readLine(file);
+  _iftttKey    = readLine(file);
+  _treshold    = readLine(file);
+  _tresholdMin = readLine(file);
+  _deviceName  = readLine(file);
 
   file.close();
   Serial.println("End Read ");
@@ -56,8 +55,6 @@ String Settings::readLine(File f) {
       ret += x;
     }
   }
-  Serial.print("Readline -> "); 
-  Serial.println(ret);
 
   return ret; 
 }
@@ -73,27 +70,29 @@ void Settings::save() {
   }
 
   Serial.println("Will write");
-  Serial.println(this->_appUser);
   
-  Serial.println(this->_appUser);
+  //Serial.println(this->_appUser);
   file.println(this->_appUser);
 
-  Serial.println(this->_appPass);
+  //Serial.println(this->_appPass);
   file.println(this->_appPass);
 
-  Serial.println(this->_ssid);
+  //Serial.println(this->_ssid);
   file.println(this->_ssid);
 
-  Serial.println(this->_ssidPass);
+  //Serial.println(this->_ssidPass);
   file.println(this->_ssidPass);
 
-  Serial.println(this->_iftttKey);
+  //Serial.println(this->_iftttKey);
   file.println(this->_iftttKey);
 
-  Serial.println(this->_treshold);
+  //Serial.println(this->_treshold);
   file.println(this->_treshold);
 
-  Serial.println(this->_deviceName);
+  //Serial.println(this->_treshold);
+  file.println(this->_tresholdMin);
+
+  //Serial.println(this->_deviceName);
   file.println(this->_deviceName);
 
   file.close();
@@ -118,6 +117,9 @@ String Settings::getIFTTTKey() {
 int   Settings::getTreshold() {
     return _treshold.toInt();
 }
+int   Settings::getTresholdMin() {
+    return _tresholdMin.toInt();
+}
 String Settings::getDeviceName() {
     return _deviceName;
 }
@@ -139,6 +141,9 @@ void Settings::setIFTTTKey(String val) {
 }
 void Settings::setTreshold(int val) {
     _treshold = String(val);
+}
+void Settings::setTresholdMin(int val) {
+    _tresholdMin = String(val);
 }
 void Settings::setDeviceName(String val) {
     _deviceName = val;

@@ -16,6 +16,7 @@ class Settings {
     String getSSIDPass();
     String getIFTTTKey();
     int   getTreshold();
+    int   getTresholdMin();
     String getDeviceName();
     void  setAppUser(String val);
     void  setAppPass(String val);
@@ -23,6 +24,7 @@ class Settings {
     void  setSSIDPass(String val);
     void  setIFTTTKey(String val);
     void  setTreshold(int val);
+    void  setTresholdMin(int val);
     void  setDeviceName(String val);
   private:
     String readLine(File f);
@@ -32,6 +34,7 @@ class Settings {
     String _ssidPass="ssidpass";
     String _iftttKey="IFTTT KEY";
     String _treshold="85";
+    String _tresholdMin="75";
     String _deviceName="Noise Alarm Name";
     char* _path;
 
