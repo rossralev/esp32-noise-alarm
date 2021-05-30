@@ -35,24 +35,48 @@
 // ====================================================================
 // ====================================================================
 
-#include <HTTPClient.h>
+#include <SPI.h>
+#include <WiFi.h>
 
-HTTPClient http;
+WiFiClient client;
 
 void send_webhook(String MakerIFTTT_Event, String MakerIFTTT_Key, String value1, String value2, String value3) {
 
     // connect to the Maker event server
-    http.begin("http://maker.ifttt.com/trigger/" + MakerIFTTT_Event + "/with/key/" + MakerIFTTT_Key);
-    http.addHeader("Content-Type", "application/json");
+    //http.begin("http://maker.ifttt.com/trigger/" + MakerIFTTT_Event + "/with/key/" + MakerIFTTT_Key);
+
+    MakerIFTTT_Key.trim();
+    MakerIFTTT_Event.trim();
+    value1.trim();
+    value2.trim();
+    value3.trim();
 
     String c = "{\"value1\":\"" + value1 + "\",\"value2\":\"" + value2 + "\",\"value3\":\"" + value3 + "\"}";
     Serial.println(c);
 
-    int httpResponseCode = http.POST(c);
+    //client.connect("192.168.0.189", 9000);
+    client.connect("maker.ifttt.com", 80);
+    String p = "POST /trigger/"+ MakerIFTTT_Event +"/with/key/"+ MakerIFTTT_Key +" HTTP/1.0\r\n";
+    p += "Host: maker.ifttt.com\r\n";
+    p += "Accept: application/json\r\n";
+    p += "Content-Type: application/json\r\n";
+    p += "Content-Length: " + String(c.length()) + "\r\n\r\n";
+    p += c;
 
-    if(httpResponseCode > 0 ) {
+    Serial.println(p);
+    client.print(p);
+
+    Serial.println(client.readStringUntil('\n'));
     
-        String response = http.getString();  //Get the response to the request
+    //c.trim();
+    //http.addHeader("Content-Type", "application/json");
+    //Serial.println(c);
+
+    //int httpResponseCode = http.GET();
+    
+    /*if(httpResponseCode > 0 ) {
+    
+        String response = http.getString(); //Get the response to the request
         Serial.println(httpResponseCode);   //Print return code
         Serial.println(response);           //Print request answer
     
@@ -64,6 +88,6 @@ void send_webhook(String MakerIFTTT_Event, String MakerIFTTT_Key, String value1,
         Serial.print("Error on sending POST: ");
         Serial.println(httpResponseCode);
     
-    }
+    }*/
     
 }

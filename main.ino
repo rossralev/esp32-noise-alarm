@@ -18,7 +18,7 @@ Settings *settings;
 HttpApp *httpApp;
 
 int sensorPin = 34;
-int buttonPin = 1; 
+int buttonPressed = 0; 
 int sensorValue = 0;
 int st = 3;
 unsigned long lastRead = 0;
@@ -29,17 +29,10 @@ void setUpWifiClient(String ssid, String pass) {
   
   // Connect to WiFi network
 
-  int len =  ssid.length() + 0;
-  char ssidChar[len];
-  ssid.toCharArray(ssidChar, len);
-
-  len =  pass.length() + 0;
-  char passChar[len];
-  pass.toCharArray(passChar, len);
-
   WiFi.mode(WIFI_STA);
-  WiFi.begin(ssidChar, passChar);
-  Serial.println(ssidChar);
+  WiFi.begin(ssid.c_str(), pass.c_str());
+  Serial.println(ssid);
+  Serial.println(ssid.length());
 
   // Wait for connection
   while (WiFi.status() != WL_CONNECTED) {
@@ -96,8 +89,8 @@ void setup(void) {
      EEPROM.commit();
   }
 
-  pinMode(16, INPUT);
   pinMode(17, INPUT);
+  pinMode(16, INPUT);
 
   settings = new Settings("/settings.txt");
 
@@ -125,26 +118,38 @@ void loop(void) {
   if(millis() - lastRead > 1000){
 
     int newValue = analogRead(sensorPin);
+    int a = analogRead(sensorPin);
+    newValue = max(newValue, a);
+    a = analogRead(sensorPin);
+    newValue = max(newValue, a);
     delay(200);
-    Serial.println(digitalRead(adminModePin));
+
+    Serial.println(digitalRead(17));
+    Serial.println(digitalRead(16));
+  
     // Enter setup after restart
     if(digitalRead(adminModePin) == HIGH) {
-      EEPROM.write(admSettingsAddr, 255);
-      Serial.println("Set Admin on next start...");
-      delay(100);
-      EEPROM.commit();
-      ESP.restart();
+      if(buttonPressed++ > 10) {
+        EEPROM.write(admSettingsAddr, 255);
+        Serial.println("Set Admin on next start...");
+        delay(100);
+        EEPROM.commit();
+        ESP.restart();
+      }
+    } else {
+      buttonPressed = 0;
     }
 
+    httpApp->state = newValue;
     Serial.println(newValue);
+    
     if( abs(newValue-sensorValue) > st && (newValue >= settings->getTreshold() ||  newValue <= settings->getTresholdMin())) {
-      Serial.println(sensorValue);
-      httpApp->state = newValue;
+     
       sensorValue = newValue;
+
       if(millis()-lastAlarm > 10000){
 
         send_webhook(EVENT_NAME, settings->getIFTTTKey(), settings->getDeviceName(), String(sensorValue), "");
-        send_webhook(EVENT_NAME, "cCCLT5h2tkVdWrqa5GCHtZ", "Test", "16", "");
 
         lastAlarm = millis();
         delay(100);

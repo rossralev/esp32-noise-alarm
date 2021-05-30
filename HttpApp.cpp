@@ -22,22 +22,12 @@ void HttpApp::handle_http_not_found() {
 void HttpApp::handle_http_settings() {
     Serial.println("Enter Settings");
 
-    _settings->getAppUser().trim();
-    int len =  _settings->getAppUser().length() + 0;
-    char usr[len];
-    _settings->getAppUser().toCharArray(usr, len);
 
-    _settings->getAppPass().trim();
-    len =  _settings->getAppPass().length() + 0;
-    char pass[len];
-    _settings->getAppPass().toCharArray(pass, len);
-
-    Serial.println(usr);
-    Serial.println(pass);
-
-    //if (!_server->authenticate(usr[0], pass[0])) {
-    //    return _server->requestAuthentication();
-    //}    
+    //if (!_server->authenticate("admin", "NoNoise2da!")) {
+    if (!_server->authenticate(_settings->getAppUser().c_str(), _settings->getAppPass().c_str())) {
+        delay(1000);
+        return _server->requestAuthentication();
+    }    
 
     if(_server->method() == HTTP_POST) {
   

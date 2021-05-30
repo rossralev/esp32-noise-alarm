@@ -47,13 +47,14 @@ void Settings::load() {
 String Settings::readLine(File f) {
 
   char x;
+  x = ' ';
   String ret;
 
-  while(f.available() && x != '\n') {
+  while(f.available() && x != '\n' ) {
     x = f.read();
-    if(x != '\n') {
-      ret += x;
-    }
+    if(x != '\n' && x != '\r') {
+      ret.concat(String(x));
+    } 
   }
 
   return ret; 
